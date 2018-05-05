@@ -1,60 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <meta charset="utf-8">
+    <title>Reactjs in 40 </title>
+    <style media="screen">
+        .like-btn {
+            font-size: 50px;
+        }
+    </style>
 </head>
 
 <body>
     <div class='wrapper'></div>
 </body>
 
-</html>
-
-<script>
-
-    class LikeButton {
-        constructor() {
-            this.state = { isLiked: false }
+<script type="text/javascript">
+    /* Component */
+    class Component {
+        constructor(props = {}) {
+            this.props = props
         }
         setState(state) {
-            let oldEl = this.el
+            const oldEl = this.el
             this.state = state
-            this.el = this.render()
-            if (this.onStateChange) {
-                this.onStateChange(oldEl, this.el)
-            }
+            this.el = this.renderDOM()
+            if (this.onStateChange) this.onStateChange(oldEl, this.el)
         }
-        changeLikeText() {
+        renderDOM() {
+            this.el = createDOMFromString(this.render())
+            if (this.onClick) {
+                this.el.addEventListener('click', this.onClick.bind(this), false)
+            }
+            return this.el
+        }
+    }
+    const createDOMFromString = (domString) => {
+        const div = document.createElement('div')
+        div.innerHTML = domString
+        return div
+    }
+    const mount = (component, wrapper) => {
+        wrapper.appendChild(component.renderDOM())
+        component.onStateChange = (oldEl, newEl) => {
+            wrapper.insertBefore(newEl, oldEl)
+            wrapper.removeChild(oldEl)
+        }
+    }
+    /* ========================================= */
+    class LikeButton extends Component {
+        constructor(props) {
+            super(props)
+            this.state = { isLiked: false }
+        }
+        onClick() {
             this.setState({
                 isLiked: !this.state.isLiked
             })
         }
-        createDOMFromString(domString) {
-            const div = document.createElement('div')
-            div.innerHTML = domString
-            return div
+        render() {
+            return `
+          <button class='like-btn' style="background-color: ${this.props.bgColor}">
+            <span class='like-text'>
+              ${this.state.isLiked ? '取消' : '点赞'}
+            </span>
+            <span>👍</span>
+          </button>
+        `
+        }
+    }
+    class RedBlueButton extends Component {
+        constructor(props) {
+            super(props)
+            this.state = {
+                color: 'red'
+            }
+        }
+        onClick() {
+            this.setState({
+                color: 'blue'
+            })
         }
         render() {
-            this.el = this.createDOMFromString(`
-                <button class='like-btn'>
-                <span class='like-text'>${this.state.isLiked}</span>
-                <span> </span>
-                </button>
-             `)
-            this.el.addEventListener('click', this.changeLikeText.bind(this), false)
-            return this.el
+            return `
+          <div style='color: ${this.state.color};'>${this.state.color}</div>
+        `
         }
     }
     const wrapper = document.querySelector('.wrapper')
-    const likeButton1 = new LikeButton()
-    likeButton1.x = 'xxx'
-    wrapper.appendChild(likeButton1.render())
-    likeButton1.onStateChange = (oldEl, newEl) => {
-        wrapper.insertBefore(newEl, oldEl) // 插入新的元素
-        wrapper.removeChild(oldEl) // 删除旧的元素
-    }
+    mount(new LikeButton({ bgColor: 'red' }), wrapper)
+    mount(new LikeButton(), wrapper)
+    mount(new RedBlueButton(), wrapper)
 </script>
